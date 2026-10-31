@@ -46,6 +46,7 @@
 #define MB_PDU_REQ_READ_ADDR_OFF            ( MB_PDU_DATA_OFF + 0 )
 #define MB_PDU_REQ_READ_COILCNT_OFF         ( MB_PDU_DATA_OFF + 2 )
 #define MB_PDU_REQ_READ_SIZE                ( 4 )
+#define MB_PDU_REQ_READ_COILCNT_MAX         ( 0x07D0 )
 #define MB_PDU_FUNC_READ_COILCNT_OFF        ( MB_PDU_DATA_OFF + 0 )
 #define MB_PDU_FUNC_READ_VALUES_OFF         ( MB_PDU_DATA_OFF + 1 )
 #define MB_PDU_FUNC_READ_SIZE_MIN           ( 1 )
@@ -90,7 +91,9 @@ eMBMasterReqReadCoils( UCHAR ucSndAddr, USHORT usCoilAddr, USHORT usNCoils ,LONG
     UCHAR                 *ucMBFrame;
     eMBMasterReqErrCode    eErrStatus = MB_MRE_NO_ERR;
 
-    if ( ucSndAddr > MB_MASTER_TOTAL_SLAVE_NUM ) eErrStatus = MB_MRE_ILL_ARG;
+    if ( ( ucSndAddr > MB_MASTER_TOTAL_SLAVE_NUM ) ||
+         ( usNCoils < 1 ) || ( usNCoils > MB_PDU_REQ_READ_COILCNT_MAX ) ||
+         ( ( ULONG ) usCoilAddr + usNCoils > 0x10000UL ) ) eErrStatus = MB_MRE_ILL_ARG;
     else if ( xMBMasterRunResTake( lTimeOut ) == FALSE ) eErrStatus = MB_MRE_MASTER_BUSY;
     else
     {
@@ -293,7 +296,9 @@ eMBMasterReqWriteMultipleCoils( UCHAR ucSndAddr,
     eMBMasterReqErrCode    eErrStatus = MB_MRE_NO_ERR;
 
     if ( ucSndAddr > MB_MASTER_TOTAL_SLAVE_NUM ) eErrStatus = MB_MRE_ILL_ARG;
-    else if ( usNCoils > MB_PDU_REQ_WRITE_MUL_COILCNT_MAX ) eErrStatus = MB_MRE_ILL_ARG;
+    else if ( ( usNCoils < 1 ) || ( usNCoils > MB_PDU_REQ_WRITE_MUL_COILCNT_MAX ) ||
+              ( pucDataBuffer == NULL ) ||
+              ( ( ULONG ) usCoilAddr + usNCoils > 0x10000UL ) ) eErrStatus = MB_MRE_ILL_ARG;
     else if ( xMBMasterRunResTake( lTimeOut ) == FALSE ) eErrStatus = MB_MRE_MASTER_BUSY;
     else
     {

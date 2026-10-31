@@ -1,0 +1,22 @@
+name: Host master RTU regression
+
+on:
+  push:
+    branches: [master, 'fix/rtu-master-request-bounds']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  host:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test request bounds and RTU frames with ASan and UBSan
+        run: ./tests/host/run.sh

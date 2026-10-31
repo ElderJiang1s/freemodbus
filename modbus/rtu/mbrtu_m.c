@@ -72,7 +72,7 @@ typedef enum
 static volatile eMBMasterSndState eSndState;
 static volatile eMBMasterRcvState eRcvState;
 
-static volatile UCHAR  ucMasterRTUSndBuf[MB_PDU_SIZE_MAX];
+static volatile UCHAR  ucMasterRTUSndBuf[MB_SER_PDU_SIZE_MAX];
 static volatile UCHAR  ucMasterRTURcvBuf[MB_SER_PDU_SIZE_MAX];
 static volatile USHORT usMasterSendPDULength;
 
@@ -194,7 +194,14 @@ eMBMasterRTUSend( UCHAR ucSlaveAddress, const UCHAR * pucFrame, USHORT usLength 
     eMBErrorCode    eStatus = MB_ENOERR;
     USHORT          usCRC16;
 
-    if ( ucSlaveAddress > MB_MASTER_TOTAL_SLAVE_NUM ) return MB_EINVAL;
+    /* The PDU must use our buffer, including room for address and CRC. */
+    if( ( ucSlaveAddress > MB_MASTER_TOTAL_SLAVE_NUM ) ||
+        ( pucFrame != ( const UCHAR * ) &ucMasterRTUSndBuf[MB_SER_PDU_PDU_OFF] ) ||
+        ( usLength < MB_PDU_SIZE_MIN ) || ( usLength > MB_PDU_SIZE_MAX ) ||
+        ( usLength > sizeof( ucMasterRTUSndBuf ) - MB_SER_PDU_PDU_OFF - MB_SER_PDU_SIZE_CRC ) )
+    {
+        return MB_EINVAL;
+    }
 
     ENTER_CRITICAL_SECTION(  );
 
