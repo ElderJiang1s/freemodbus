@@ -63,7 +63,7 @@
 #define MB_PDU_REQ_WRITE_MUL_BYTECNT_OFF        ( MB_PDU_DATA_OFF + 4 )
 #define MB_PDU_REQ_WRITE_MUL_VALUES_OFF         ( MB_PDU_DATA_OFF + 5 )
 #define MB_PDU_REQ_WRITE_MUL_SIZE_MIN           ( 5 )
-#define MB_PDU_REQ_WRITE_MUL_REGCNT_MAX         ( 0x0078 )
+#define MB_PDU_REQ_WRITE_MUL_REGCNT_MAX         ( 0x007B )
 #define MB_PDU_FUNC_WRITE_MUL_ADDR_OFF          ( MB_PDU_DATA_OFF + 0 )
 #define MB_PDU_FUNC_WRITE_MUL_REGCNT_OFF        ( MB_PDU_DATA_OFF + 2 )
 #define MB_PDU_FUNC_WRITE_MUL_SIZE              ( 4 )
@@ -75,6 +75,7 @@
 #define MB_PDU_REQ_READWRITE_WRITE_BYTECNT_OFF  ( MB_PDU_DATA_OFF + 8 )
 #define MB_PDU_REQ_READWRITE_WRITE_VALUES_OFF   ( MB_PDU_DATA_OFF + 9 )
 #define MB_PDU_REQ_READWRITE_SIZE_MIN           ( 9 )
+#define MB_PDU_REQ_READWRITE_WRITE_REGCNT_MAX   ( 0x0079 )
 #define MB_PDU_FUNC_READWRITE_READ_BYTECNT_OFF  ( MB_PDU_DATA_OFF + 0 )
 #define MB_PDU_FUNC_READWRITE_READ_VALUES_OFF   ( MB_PDU_DATA_OFF + 1 )
 #define MB_PDU_FUNC_READWRITE_SIZE_MIN          ( 1 )
@@ -173,7 +174,10 @@ eMBMasterReqWriteMultipleHoldingRegister( UCHAR ucSndAddr,
     USHORT                 usRegIndex = 0;
     eMBMasterReqErrCode    eErrStatus = MB_MRE_NO_ERR;
 
-    if ( ucSndAddr > MB_MASTER_TOTAL_SLAVE_NUM ) eErrStatus = MB_MRE_ILL_ARG;
+    if ( ( ucSndAddr > MB_MASTER_TOTAL_SLAVE_NUM ) ||
+         ( usNRegs < 1 ) || ( usNRegs > MB_PDU_REQ_WRITE_MUL_REGCNT_MAX ) ||
+         ( pusDataBuffer == NULL ) ||
+         ( ( ULONG ) usRegAddr + usNRegs > 0x10000UL ) ) eErrStatus = MB_MRE_ILL_ARG;
     else if ( xMBMasterRunResTake( lTimeOut ) == FALSE ) eErrStatus = MB_MRE_MASTER_BUSY;
     else
     {
@@ -267,7 +271,9 @@ eMBMasterReqReadHoldingRegister( UCHAR ucSndAddr, USHORT usRegAddr, USHORT usNRe
     UCHAR                 *ucMBFrame;
     eMBMasterReqErrCode    eErrStatus = MB_MRE_NO_ERR;
 
-    if ( ucSndAddr > MB_MASTER_TOTAL_SLAVE_NUM ) eErrStatus = MB_MRE_ILL_ARG;
+    if ( ( ucSndAddr > MB_MASTER_TOTAL_SLAVE_NUM ) ||
+         ( usNRegs < 1 ) || ( usNRegs > MB_PDU_FUNC_READ_REGCNT_MAX ) ||
+         ( ( ULONG ) usRegAddr + usNRegs > 0x10000UL ) ) eErrStatus = MB_MRE_ILL_ARG;
     else if ( xMBMasterRunResTake( lTimeOut ) == FALSE ) eErrStatus = MB_MRE_MASTER_BUSY;
     else
     {
@@ -362,7 +368,12 @@ eMBMasterReqReadWriteMultipleHoldingRegister( UCHAR ucSndAddr,
     USHORT                 usRegIndex = 0;
     eMBMasterReqErrCode    eErrStatus = MB_MRE_NO_ERR;
 
-    if ( ucSndAddr > MB_MASTER_TOTAL_SLAVE_NUM ) eErrStatus = MB_MRE_ILL_ARG;
+    if ( ( ucSndAddr > MB_MASTER_TOTAL_SLAVE_NUM ) ||
+         ( usNReadRegs < 1 ) || ( usNReadRegs > MB_PDU_FUNC_READ_REGCNT_MAX ) ||
+         ( usNWriteRegs < 1 ) || ( usNWriteRegs > MB_PDU_REQ_READWRITE_WRITE_REGCNT_MAX ) ||
+         ( pusDataBuffer == NULL ) ||
+         ( ( ULONG ) usReadRegAddr + usNReadRegs > 0x10000UL ) ||
+         ( ( ULONG ) usWriteRegAddr + usNWriteRegs > 0x10000UL ) ) eErrStatus = MB_MRE_ILL_ARG;
     else if ( xMBMasterRunResTake( lTimeOut ) == FALSE ) eErrStatus = MB_MRE_MASTER_BUSY;
     else
     {
